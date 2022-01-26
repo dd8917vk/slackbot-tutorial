@@ -79,7 +79,7 @@ class Bot(Connector):
             with open(prev_count, 'r') as file:
                 old_count = int(file.readlines()[0])
                 print(f'Old count artifacts from text file: {old_count}')
-                if old_count != current_num_artifacts:
+                if old_count < current_num_artifacts:
                     print('counts are different, do something')
                     self.send_message("```Standby for a new artifact...```")
                     time.sleep(1)
@@ -94,7 +94,7 @@ class Bot(Connector):
 
     def pureimg(self):
         try:
-            response = self.SLACK_CLIENT.files_upload(file='clever.png', initial_comment='```Clever Girl...```', channels='general')
+            response = self.SLACK_CLIENT.files_upload(file='clever.gif', channels='general')
         except SlackApiError as e:
     # You will get a SlackApiError if "ok" is False
             assert e.response["ok"] is False
