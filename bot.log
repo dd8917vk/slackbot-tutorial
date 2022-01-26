@@ -1,0 +1,4 @@
+2022-01-25 19:20:56,370 ERROR root Request to Slack API Failed: 200.
+2022-01-25 19:20:56,370 ERROR root {'ok': False, 'error': 'channel_not_found'}
+2022-01-25 19:21:05,647 ERROR root Request to Slack API Failed: 200.
+2022-01-25 19:21:05,648 ERROR root {'ok': False, 'error': 'channel_not_found'}
