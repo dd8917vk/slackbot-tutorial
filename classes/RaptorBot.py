@@ -9,6 +9,7 @@ import ssl
 from bs4 import BeautifulSoup
 import requests
 from requests_html import HTMLSession
+import random
 from classes.Connector import Connector
 
 class RaptorBot(Connector):
@@ -71,7 +72,7 @@ class RaptorBot(Connector):
                     print('counts are different, do something')
                     self.send_message("```Standby for a new artifact...```")
                     time.sleep(1)
-                    self.pureimg()
+                    self.attach_image()
         #if file with num_artifacts doesn't exist, create it and write the num_artifacts
         except FileNotFoundError:
             with open(prev_count, 'w') as file:
@@ -80,7 +81,9 @@ class RaptorBot(Connector):
             with open(prev_count, 'w') as file:
                 file.writelines(str(current_num_artifacts))
 
-    def pureimg(self):
+    def attach_image(self):
+        gifs = os.getcwd()+'/gifs'
+        print(gifs)
         try:
             response = self.SLACK_CLIENT.files_upload(file='./gifs/clever.gif', channels=self.channel)
         except SlackApiError as e:
