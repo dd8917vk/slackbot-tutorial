@@ -82,10 +82,9 @@ class RaptorBot(Connector):
                 file.writelines(str(current_num_artifacts))
 
     def attach_image(self):
-        gifs = os.getcwd()+'/gifs'
-        print(gifs)
+        random_gif = random.choice(os.listdir(os.getcwd()+'/gifs'))
         try:
-            response = self.SLACK_CLIENT.files_upload(file='./gifs/clever.gif', channels=self.channel)
+            response = self.SLACK_CLIENT.files_upload(file='./gifs/'+random_gif, channels=self.channel)
         except SlackApiError as e:
             # You will get a SlackApiError if "ok" is False
             logging.basicConfig(filename=self.log_path, level=logging.DEBUG, 
