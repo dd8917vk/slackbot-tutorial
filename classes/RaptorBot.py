@@ -8,28 +8,17 @@ from slack_sdk.errors import SlackApiError
 import ssl
 from bs4 import BeautifulSoup
 import requests
-
 from requests_html import HTMLSession
+from classes.Connector import Connector
 
-class Connector:
-    def __init__(self):
-        #Creds in creds.json file, don't forget to add to .gitignore
-        self.creds = self.get_creds()
-        self.token = self.creds["token"].strip()
-        self.signing_secret = self.creds["signing_secret"].strip()
-
-    def get_creds(self):
-        with open('./creds.json') as credentials:
-            creds = json.load(credentials)
-        return creds
-
-
-class Bot(Connector):
+class RaptorBot(Connector):
     def __init__(self):
         super().__init__()
         #Inhereted from Connector, create web client with slack token
         self.SLACK_BOT_TOKEN = self.token
         self.SLACK_CLIENT = WebClient(self.SLACK_BOT_TOKEN) 
+        self.log_path = os.getcwd()+'/bot.log'
+        self.channel = '#general'
 
     def send_message(self, message):
         #If you get ssl error, go to your python installation directory and run install certs sh (google it)
@@ -40,21 +29,20 @@ class Bot(Connector):
         # make the POST request through the python slack client
         try:
             self.SLACK_CLIENT.chat_postMessage(
-            channel='#general',
+            channel=self.channel,
             text=message
             )#.get()
         #if there is an error, append it to the log
         except SlackApiError as e:
-            log_path = os.getcwd()+'/bot.log'
-            if not os.path.isfile(log_path):
+            if not os.path.isfile(self.log_path):
                 #create logging file if it doesn't exist
                 with open(log_path, 'a') as file:
                     pass
             #log error if slack message doesn't go through
-            logging.basicConfig(filename=log_path, level=logging.DEBUG, 
+            logging.basicConfig(filename=self.log_path, level=logging.DEBUG, 
                     format='%(asctime)s %(levelname)s %(name)s %(message)s') 
             logging.error('Request to Slack API Failed: {}.'.format(e.response.status_code))
-            logging.error(e.response)
+            return logging.error(e.response)
 
     def scrape(self):
         session = HTMLSession()
@@ -94,12 +82,19 @@ class Bot(Connector):
 
     def pureimg(self):
         try:
-            response = self.SLACK_CLIENT.files_upload(file='clever.gif', channels='general')
+            response = self.SLACK_CLIENT.files_upload(file='./gifs/clever.gif', channels=self.channel)
         except SlackApiError as e:
-    # You will get a SlackApiError if "ok" is False
-            assert e.response["ok"] is False
-            assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            print(f"Got an error: {e.response['error']}")
+            # You will get a SlackApiError if "ok" is False
+            logging.basicConfig(filename=self.log_path, level=logging.DEBUG, 
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s') 
+            logging.error('Request to Slack API Failed: {}.'.format(e.response.status_code))
+            logging.error(e.response)
+
+
+
+            # assert e.response["ok"] is False
+            # assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
+            # print(f"Got an error: {e.response['error']}")
 
     # def pureimg(self):
     #     def subimg(data):
@@ -121,9 +116,6 @@ class Bot(Connector):
         # print(current_num_artifacts)
         # print(html)
 
-if __name__ == "__main__":
-    b = Bot()
-    print(b.scrape())
     # b.send_message("hello")
     # messages = ["hello", "thomas", "nichols", "I am a bot from james' imagination"]
     # for m in messages:
