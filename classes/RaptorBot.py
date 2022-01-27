@@ -51,35 +51,67 @@ class RaptorBot(Connector):
         #Have to call html render to force javascript to load so html can be scraped
         req.html.render()
         html = req.html.find('div.row')
-        #This is the number of div's each containing one artifact on the web page
-        current_num_artifacts = len(html[1].find('a.title'))
+        current_artifacts = html[1].find('a.title')
+        #The number of artifacts currently on the exchange
+        current_num_artifacts = len(self.get_artifact_links(current_artifacts))
+        current_artifact_links = self.get_artifact_links(current_artifacts)
         #This is the top artifact on the page
-        top_artifact = html[1].find('a.title')[0]
         #A link to the top (new or latest) artifact on the page for slack message
-        link_to_artifact = f"https://docs.velociraptor.app/{list(top_artifact.links)[0]}"
+        # link_to_artifact = f"https://docs.velociraptor.app/{list(top_artifact.links)[0]}"
         # return (current_num_artifacts, link_to_artifact)
-        return self.check_new_artifact(current_num_artifacts, link_to_artifact)
+        return self.check_new_artifact(current_num_artifacts, current_artifact_links)
 
-    def check_new_artifact(self, current_num_artifacts, link_to_artifact):
+    #Responsible for getting array of links to all artifacts, if more than one artifact is posted we need this
+    def get_artifact_links(self, current_artifacts):
+        list_artifacts = list(current_artifacts)
+        artifact_links = [list(obj.find('a.title')[0].links)[0] for obj in list_artifacts]
+        return artifact_links
+
+    def check_new_artifact(self, current_num_artifacts, current_artifact_links):
         print(f'Current num artifacts from raptor: {current_num_artifacts}')
-        prev_count = os.getcwd()+'/prev_count.txt'
+        config = os.getcwd()+'/config.json'
         try:
         #try reading previous count artifacts from static text file to compare to new num from exchange
-            with open(prev_count, 'r') as file:
-                old_count = int(file.readlines()[0])
-                print(f'Old count artifacts from text file: {old_count}')
-                if old_count < current_num_artifacts:
-                    print('counts are different, do something')
-                    self.send_message("```Standby for a new artifact...```")
-                    time.sleep(1)
-                    self.attach_image()
+            if self.is_first_run:
+                json_string = {
+                    "is_first_run":False,
+                    "old_num_artifacts": current_num_artifacts
+                }
+                with open('./config.json', 'w') as outfile:
+                    json.dump(json_string, outfile)
+                #set class variables to current state so on the second run, this will hit the else statement
+                self.is_first_run = False
+                self.old_num_artifacts = current_num_artifacts
+                print(self.is_first_run)
+                print(self.old_num_artifacts)
+                #call scrape again, to hit the else statement and bypass the first run condition
+                #thereby running the rest of the program
+                self.scrape()
+            else:
+                #Continue with the logic of posting the newest artifacts if not first run of program
+                if self.old_num_artifacts < current_num_artifacts:
+                    print(f'Old num artifacts: {self.old_num_artifacts}')
+                    print(f'link length: {len(current_artifact_links)}')
+
+        except Exception as e:
+            return e 
+
+
+            # with open('./config.json') as file:
+            #     current_state = json.load(file)
+            #     old_num_artifacts = current_state["num_artifacts"]
+            #     is_first_run = current_state["is_first_run"]
+            #     if is_first_run
+                # old_count = current_state["num_artifacts"]
+                # print(old_count)
+                # old_count = int(file.readlines()[0])
+                # print(f'Old count artifacts from text file: {old_count}')
+                # if old_count < current_num_artifacts:
+                #     print('counts are different, do something')
+                #     self.send_message("```Standby for a new artifact...```")
+                #     time.sleep(1)
+                #     self.attach_image()
         #if file with num_artifacts doesn't exist, create it and write the num_artifacts
-        except FileNotFoundError:
-            with open(prev_count, 'w') as file:
-                file.writelines(str(current_num_artifacts))
-        if not os.path.isfile(prev_count):
-            with open(prev_count, 'w') as file:
-                file.writelines(str(current_num_artifacts))
 
     def attach_image(self):
         random_gif = random.choice(os.listdir(os.getcwd()+'/gifs'))
