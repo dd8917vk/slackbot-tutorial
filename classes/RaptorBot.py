@@ -68,7 +68,6 @@ class RaptorBot(Connector):
         return artifact_links
 
     def check_new_artifact(self, current_num_artifacts, current_artifact_links):
-        print(f'Current num artifacts from raptor: {current_num_artifacts}')
         config = os.getcwd()+'/config.json'
         try:
         #try reading previous count artifacts from static text file to compare to new num from exchange
@@ -82,8 +81,6 @@ class RaptorBot(Connector):
                 #set class variables to current state so on the second run, this will hit the else statement
                 self.is_first_run = False
                 self.old_num_artifacts = current_num_artifacts
-                print(self.is_first_run)
-                print(self.old_num_artifacts)
                 #call scrape again, to hit the else statement and bypass the first run condition
                 #thereby running the rest of the program
                 self.scrape()
@@ -92,6 +89,9 @@ class RaptorBot(Connector):
                 if self.old_num_artifacts < current_num_artifacts:
                     print(f'Old num artifacts: {self.old_num_artifacts}')
                     print(f'link length: {len(current_artifact_links)}')
+                    new_num_artifacts = self.old_num_artifacts - current_num_artifacts
+                    # print(current_artifact_links[:new_num_artifacts])
+                    # print(current_artifact_links[:new_num_artifacts])
 
         except Exception as e:
             return e 
