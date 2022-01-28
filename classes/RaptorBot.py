@@ -91,7 +91,8 @@ class RaptorBot(Connector):
                 if self.old_num_artifacts < current_num_artifacts:
                     print(f'Old num artifacts: {self.old_num_artifacts}')
                     print(f'link length: {len(current_artifact_links)}')
-                    new_num_artifacts = self.old_num_artifacts - current_num_artifacts
+                    new_num_artifacts = current_num_artifacts - self.old_num_artifacts
+                    print(current_artifact_links[0:new_num_artifacts])
                     # print(current_artifact_links[:new_num_artifacts])
                     # print(current_artifact_links[:new_num_artifacts])
 
