@@ -1,1 +1,6 @@
-{"is_first_run": false, "old_num_artifacts": 54}
+{
+    "raptor_bot": {
+        "is_first_run": false, 
+        "old_num_artifacts": 54
+    }
+}

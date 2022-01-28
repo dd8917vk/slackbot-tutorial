@@ -16,10 +16,12 @@ class RaptorBot(Connector):
     def __init__(self):
         super().__init__()
         #Inhereted from Connector, create web client with slack token
-        self.SLACK_BOT_TOKEN = self.token
+        self.SLACK_BOT_TOKEN = self.slack_token
         self.SLACK_CLIENT = WebClient(self.SLACK_BOT_TOKEN) 
         self.log_path = os.getcwd()+'/bot.log'
         self.channel = '#general'
+        self.old_num_artifacts = self.config["raptor_bot"]["old_num_artifacts"]
+        self.is_first_run = self.config["raptor_bot"]["is_first_run"]
 
     def send_message(self, message):
         #If you get ssl error, go to your python installation directory and run install certs sh (google it)
