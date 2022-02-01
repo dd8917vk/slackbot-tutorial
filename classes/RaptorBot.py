@@ -47,6 +47,17 @@ class RaptorBot(Connector):
             logging.error('Request to Slack API Failed: {}.'.format(e.response.status_code))
             return logging.error(e.response)
 
+    def attach_image(self):
+        random_gif = random.choice(os.listdir(os.getcwd()+'/gifs'))
+        try:
+            response = self.SLACK_CLIENT.files_upload(file='./gifs/'+random_gif, channels=self.channel)
+        except SlackApiError as e:
+            # You will get a SlackApiError if "ok" is False
+            logging.basicConfig(filename=self.log_path, level=logging.DEBUG, 
+                    format='%(asctime)s %(levelname)s %(name)s %(message)s') 
+            logging.error('Request to Slack API Failed: {}.'.format(e.response.status_code))
+            logging.error(e.response)
+
     def scrape(self):
         session = HTMLSession()
         req = session.get('https://docs.velociraptor.app/exchange/')
@@ -57,10 +68,6 @@ class RaptorBot(Connector):
         #The number of artifacts currently on the exchange
         current_num_artifacts = len(self.get_artifact_links(current_artifacts))
         current_artifact_links = self.get_artifact_links(current_artifacts)
-        #This is the top artifact on the page
-        #A link to the top (new or latest) artifact on the page for slack message
-        # link_to_artifact = f"https://docs.velociraptor.app/{list(top_artifact.links)[0]}"
-        # return (current_num_artifacts, link_to_artifact)
         return self.check_new_artifact(current_num_artifacts, current_artifact_links)
 
     #Responsible for getting array of links to all artifacts, if more than one artifact is posted we need this
@@ -75,8 +82,10 @@ class RaptorBot(Connector):
         #try reading previous count artifacts from static text file to compare to new num from exchange
             if self.is_first_run:
                 json_string = {
-                    "is_first_run":False,
-                    "old_num_artifacts": current_num_artifacts
+                    "raptor_bot":{
+                        "is_first_run":False,
+                        "old_num_artifacts": current_num_artifacts
+                    }
                 }
                 with open('./config.json', 'w') as outfile:
                     json.dump(json_string, outfile)
@@ -87,92 +96,35 @@ class RaptorBot(Connector):
                 #thereby running the rest of the program
                 self.scrape()
             else:
+                json_string = {
+                    "raptor_bot":{
+                        "is_first_run":False,
+                        "old_num_artifacts": current_num_artifacts
+                    }
+                }
+                
+                with open('./config.json', 'w') as outfile:
+                    json.dump(json_string, outfile)
                 #Continue with the logic of posting the newest artifacts if not first run of program
                 if self.old_num_artifacts < current_num_artifacts:
                     print(f'Old num artifacts: {self.old_num_artifacts}')
                     print(f'link length: {len(current_artifact_links)}')
                     new_num_artifacts = current_num_artifacts - self.old_num_artifacts
-                    print(current_artifact_links[0:new_num_artifacts])
-                    # print(current_artifact_links[:new_num_artifacts])
-                    # print(current_artifact_links[:new_num_artifacts])
+                    new_links = current_artifact_links[0:new_num_artifacts]
+                    self.send_message("```There are new artifacts on the exchange...```")
+                    self.send_message("```STAND BY...```")
+                    self.attach_image()
+                    for link in new_links:
+                        self.send_message(f"https://docs.velociraptor.app{link}")
+                        time.sleep(0.5)
+                #Set old_num_artifacts to current_num_artifacts so program will not run in infinite loop.  old_num_artifacts needs to be updated to current count so when scrape() is called again from the main bot_runner.py file, it will not run the logic send a new slack message again.qqqqtop
+                self.old_num_artifacts = current_num_artifacts
+                return new_links
 
         except Exception as e:
             return e 
 
 
-            # with open('./config.json') as file:
-            #     current_state = json.load(file)
-            #     old_num_artifacts = current_state["num_artifacts"]
-            #     is_first_run = current_state["is_first_run"]
-            #     if is_first_run
-                # old_count = current_state["num_artifacts"]
-                # print(old_count)
-                # old_count = int(file.readlines()[0])
-                # print(f'Old count artifacts from text file: {old_count}')
-                # if old_count < current_num_artifacts:
-                #     print('counts are different, do something')
-                #     self.send_message("```Standby for a new artifact...```")
-                #     time.sleep(1)
-                #     self.attach_image()
-        #if file with num_artifacts doesn't exist, create it and write the num_artifacts
-
-    def attach_image(self):
-        random_gif = random.choice(os.listdir(os.getcwd()+'/gifs'))
-        try:
-            response = self.SLACK_CLIENT.files_upload(file='./gifs/'+random_gif, channels=self.channel)
-        except SlackApiError as e:
-            # You will get a SlackApiError if "ok" is False
-            logging.basicConfig(filename=self.log_path, level=logging.DEBUG, 
-                    format='%(asctime)s %(levelname)s %(name)s %(message)s') 
-            logging.error('Request to Slack API Failed: {}.'.format(e.response.status_code))
-            logging.error(e.response)
-
-
-
-            # assert e.response["ok"] is False
-            # assert e.response["error"]  # str like 'invalid_auth', 'channel_not_found'
-            # print(f"Got an error: {e.response['error']}")
-
-    # def pureimg(self):
-    #     def subimg(data):
-    #         data = '[{"text": "", "image_url": "'+data+'"}]'
-    #         data = [json.loads(data[1:-1])]
-    #         return data
-
-    #     slacker = WebClient(token=self.token)
-    #     #This function will make the image url to correct format.
-    #     clever = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'clever.png')
-    #     print(clever)
-    #     response = slacker.files_upload(channel='#general',file=clever)
-    #     clever = response['file']['permalink']
-
-    #     #It gives cross OS compatibility on filepath.
-    #     slacker.chat_postMessage(channel='general', text="Sample Text", username='testbot', attachments=subimg(clever), icon_emoji=':lizard:')
-
-
-        # print(current_num_artifacts)
-        # print(html)
-
-    # b.send_message("hello")
-    # messages = ["hello", "thomas", "nichols", "I am a bot from james' imagination"]
-    # for m in messages:
-    #     b.send_message(m)
-    #     time.sleep(1)
-    # messages = ["hello", "This is 2", "This is from a loop"]
-    # for m in messages:
-    #     b.send_message(m)
-    #     time.sleep(1)
-#     SLACK_BOT_TOKEN = Connector().token
-#     slack_client = WebClient(SLACK_BOT_TOKEN)
-#     logging.debug("authorized slack client")
-
-#   # # For testing
-#     msg = "Good Morning!"
-#     send_message(slack_client, msg)
-#     schedule.every(60).seconds.do(lambda: send_message(slack_client, msg))
-
-  # schedule.every().monday.at("13:15").do(lambda: sendMessage(slack_client, msg))
-    # logging.info("entering loop")
 
 #     while True:
 #         schedule.run_pending()
