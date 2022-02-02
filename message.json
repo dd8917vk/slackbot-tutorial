@@ -1,0 +1,24 @@
+{
+	"blocks": [
+		{
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "A new Raptor artifact has been released!"
+			}
+		},
+		{
+			"type": "section",
+			"block_id": "section567",
+			"text": {
+				"type": "mrkdwn",
+				"text": ":t-rex: <https://example.com|Take me to the Artifact!>  :t-rex: \n Or visit the exchange, \n https://docs.velociraptor.app/exchange/"
+			},
+			"accessory": {
+				"type": "image",
+				"image_url": "https://media.giphy.com/media/37Fsl1eFxbhtu/giphy.gif",
+				"alt_text": "Raptor Image Failed to Load."
+			}
+		}
+	]
+}

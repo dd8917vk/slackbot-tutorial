@@ -8,6 +8,7 @@ class Connector:
         self.config = self.get_config()
         self.slack_token = self.creds["raptor_creds"]["slack_token"].strip()
         self.slack_signing_secret = self.creds["raptor_creds"]["slack_signing_secret"].strip()
+        self.slack_webhook_url = self.creds["raptor_creds"]["slack_webhook_url"]
 
     def get_creds(self):
         with open('./creds.json') as credentials:
